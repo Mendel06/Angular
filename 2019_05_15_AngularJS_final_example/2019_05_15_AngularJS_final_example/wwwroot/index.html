@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="angular.min.js"></script>
+    <script>
+        let myApp = angular.module('myApp', []);
+        myApp.controller('myController', function ($scope, $http) {
+            $scope.students = [];
+            $http.get("/api/students/all").then(function (response) {
+                $scope.students.length = 0;
+                for (let i = 0; i < response.data.length; i++)
+                    $scope.students.push(response.data[i]);
+                
+            });
+            $scope.editStudent = function (student) {
+                $scope.editStudentId = student.studentId;
+                $scope.editStudentFirstName = student.firstName;
+                $scope.editStudentLastName = student.lastName;
+                $scope.isEdit = true;
+                $scope.editedStudent = student;
+            };
+            $scope.updateStudent = function () {
+                $http.get("/api/students/update?studentId=" + $scope.editStudentId +
+                    "&firstName=" + $scope.editStudentFirstName + "&lastName=" +
+                    $scope.editStudentLastName).then(function (response) {
+                        $scope.editedStudent.firstName = $scope.editStudentFirstName;
+                        $scope.editedStudent.lastName = $scope.editStudentLastName;
+                        $scope.isEdit = false;
+                        $scope.editedStudent = null;
+                    });
+            };
+            $scope.createStudent = function () {
+                
+                $http.get("/api/students/add?firstName=" + $scope.newStudentFirstName
+                    + "&lastName=" + $scope.newStudentLastName).then(function (response) {
+                        let newStudentId = response.data;
+                        let newStudent = {
+                            studentId: newStudentId,
+                            firstName: $scope.newStudentFirstName,
+                            lastName: $scope.newStudentLastName
+                        };
+                        $scope.students.push(newStudent);
+                        $scope.newStudentFirstName = "";
+                        $scope.newStudentLastName = "";
+                    });
+            };
+        });
+    </script>
+</head>
+<body>
+    <div ng-app="myApp" ng-controller="myController">
+        <table>
+            <tr>
+                <th>id</th>
+                <th>first name</th>
+                <th>last name</th>
+                <th>edit</th>
+            </tr>
+            <tr ng-repeat="student in students">
+                <td>{{student.studentId}}</td>
+                <td>{{student.firstName}}</td>
+                <td>{{student.lastName}}</td>
+                <td><button ng-click="editStudent(student)">edit</button></td>
+            </tr>
+        </table>
+        <div ng-hide="isEdit">
+            <h3>create new student</h3>
+            <p>first name: <input type="text" ng-model="newStudentFirstName" /></p>
+            <p>last name: <input type="text" ng-model="newStudentLastName" /></p>
+            <p><button ng-click="createStudent()">create</button></p>
+        </div>
+        <div ng-show="isEdit">
+            <h3>edit student</h3>
+            <p>student id: <input type="text" ng-model="editStudentId" readonly /></p>
+            <p>first name: <input type="text" ng-model="editStudentFirstName" /></p>
+            <p>last name: <input type="text" ng-model="editStudentLastName" /></p>
+            <p><button ng-click="updateStudent()">update</button></p>
+        </div>
+
+    </div>
+</body>
+</html>
